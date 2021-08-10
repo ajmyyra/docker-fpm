@@ -15,15 +15,15 @@ type Client struct {
 	cli *client.Client
 }
 
-func NewClient() Client {
+func NewClient() (Client, error) {
 	c, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
-		panic(err)
+		return Client{}, err
 	}
 
 	return Client{
 		cli: c,
-	}
+	}, nil
 }
 
 func (s Client) CreateContainer(name, image, deployment string) (string, error) {
@@ -37,13 +37,14 @@ func (s Client) CreateContainer(name, image, deployment string) (string, error) 
 			Image:        image,
 			AttachStdout: true,
 			AttachStderr: true,
-			Labels:       map[string]string{
+			Labels: map[string]string{
 				"orchestrator": "docker-fpm",
 				"deployment":   deployment,
 			},
 		},
 		&container.HostConfig{
 			Privileged: false,
+			// Resources: container.Resources{}, // TODO allow specifying these
 			// TODO mount support
 			/*Mounts: []mount.Mount{
 				{
